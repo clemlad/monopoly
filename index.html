@@ -1488,7 +1488,7 @@ ${cashDesc.length > 0 ? '- Argent : ' + cashDesc.join(', ') : ''}
 Analyse cet échange stratégiquement. Réponds en tant que joueur humain normal, pas un personnage de comédie. Sois concis (2-3 phrases max). Décide si tu acceptes, refuses, ou proposes une contre-offre. Commence par ACCEPTER, REFUSER, ou CONTRE-OFFRE: (puis décris la contre-offre si nécessaire). Parle à la première personne en français.`;
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('/api/ai', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1533,7 +1533,7 @@ ${gameState}
 ${humanPlayer.name} vient de refuser ton offre. Tu avais proposé un échange qui a été rejeté. Formule maintenant une contre-proposition différente, plus attrayante ou défends ton point de vue. Sois direct, concis (2-3 phrases), et parle comme un vrai joueur. Pas d'exagération ou de comédie. Parle en français à la première personne.`;
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('/api/ai', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1573,7 +1573,7 @@ ${humanPlayer.name} vient de dire : "${humanText}"
 Réponds naturellement comme un vrai joueur de Monopoly. Tu peux parler stratégie, faire une remarque, proposer un deal, ou répondre à la conversation. 2-3 phrases max. Parle en français, sois direct sans être robotique ni comique.`;
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('/api/ai', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1606,7 +1606,7 @@ La phase de négociation vient de commencer. Toutes les propriétés ont été a
 
   showBotTyping(bot.id);
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('/api/ai', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1642,7 +1642,7 @@ Réagis brièvement, comme un vrai joueur. Peut-être en accord, en désaccord, 
 
   showBotTyping(bot.id);
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('/api/ai', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
