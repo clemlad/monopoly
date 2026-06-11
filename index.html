@@ -1085,6 +1085,7 @@ function openNego() {
     addChatMsg('system', null, '🤝 Phase de négociation ouverte ! Toutes les propriétés ont été achetées. Discutez et échangez librement.');
     // After a moment, bots start discussing
     setTimeout(() => triggerBotNegoOpening(), 1500);
+    setTimeout(() => scheduleBotTrades(), 8000);
   }
 }
 
@@ -1658,6 +1659,79 @@ Réagis brièvement, comme un vrai joueur. Peut-être en accord, en désaccord, 
   } catch(e) {
     removeTypingIndicator();
   }
+}
+
+// ===== BOT-TO-BOT TRADE =====
+async function botInitiateTrade(initiator) {
+  const otherBots = gs.players.filter(p => p.isBot && !p.bankrupt && p.id !== initiator.id);
+  if (otherBots.length === 0) return;
+  const gameState = buildGameStateDescription();
+
+  const prompt = `Tu joues à Monopoly. Tu es ${initiator.name}, un joueur stratégique.
+
+${gameState}
+
+Tu veux proposer un échange à un autre bot pour compléter un groupe de couleur ou affaiblir un adversaire.
+Réponds UNIQUEMENT en JSON valide, sans markdown, sans texte autour :
+{
+  "propose": true,
+  "toId": <id numérique du bot cible>,
+  "myProps": [<ids des propriétés que tu donnes>],
+  "theirProps": [<ids des propriétés que tu veux>],
+  "giveCash": <montant entier que tu donnes, 0 si rien>,
+  "recvCash": <montant entier que tu veux recevoir, 0 si rien>,
+  "reason": "<1 phrase expliquant le deal>"
+}
+Si tu ne vois pas d'échange intéressant, réponds : { "propose": false }
+Les IDs des propriétés sont les indices dans le tableau BOARD. Ne propose que des propriétés que tu possèdes réellement.`;
+
+  try {
+    const response = await fetch('/api/ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ max_tokens: 400, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await response.json();
+    const raw = data.content?.map(b => b.text || '').join('') || '';
+    const json = JSON.parse(raw.replace(/```json|```/g, '').trim());
+
+    if (!json.propose) return;
+
+    const target = gs.players[json.toId];
+    if (!target || !target.isBot || target.bankrupt) return;
+
+    // Validate: initiator owns myProps, target owns theirProps
+    const myPropsValid = json.myProps.every(id => initiator.properties.includes(id));
+    const theirPropsValid = json.theirProps.every(id => target.properties.includes(id));
+    if (!myPropsValid || !theirPropsValid) return;
+    if (initiator.money < (json.giveCash || 0)) return;
+
+    const trade = {
+      fromId: initiator.id,
+      toId: target.id,
+      myProps: json.myProps,
+      theirProps: json.theirProps,
+      giveCash: json.giveCash || 0,
+      recvCash: json.recvCash || 0,
+      id: Date.now()
+    };
+
+    addChatMsg('msg', initiator.id, `💬 ${json.reason}`);
+    addTradeProposalToChat(trade, false);
+
+    // Target bot responds
+    showBotTyping(target.id);
+    setTimeout(() => botRespondToTrade(trade), 2500 + Math.random() * 2000);
+  } catch(e) {
+    // Silently ignore malformed AI response
+  }
+}
+
+function scheduleBotTrades() {
+  const bots = gs.players.filter(p => p.isBot && !p.bankrupt);
+  bots.forEach((bot, i) => {
+    setTimeout(() => botInitiateTrade(bot), 6000 + i * 5000 + Math.random() * 3000);
+  });
 }
 
 function addTradeProposalToChat(trade, isBotToHuman) {
