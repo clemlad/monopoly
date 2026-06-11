@@ -1689,10 +1689,11 @@ Les IDs des propriétés sont les indices dans le tableau BOARD. Ne propose que 
     const response = await fetch('/api/ai', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ max_tokens: 400, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({ max_tokens: 400, json_mode: true, messages: [{ role: 'user', content: prompt }] })
     });
     const data = await response.json();
     const raw = data.content?.map(b => b.text || '').join('') || '';
+    if (!raw) return;
     const json = JSON.parse(raw.replace(/```json|```/g, '').trim());
 
     if (!json.propose) return;
@@ -1723,7 +1724,7 @@ Les IDs des propriétés sont les indices dans le tableau BOARD. Ne propose que 
     showBotTyping(target.id);
     setTimeout(() => botRespondToTrade(trade), 2500 + Math.random() * 2000);
   } catch(e) {
-    // Silently ignore malformed AI response
+    console.warn('[botInitiateTrade] erreur:', e.message);
   }
 }
 
